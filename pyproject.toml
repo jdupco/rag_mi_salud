@@ -1,0 +1,28 @@
+[project]
+name = "rag-mi-salud"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Juan David Urrea Parra", email = "jdup.co@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi[standard]>=0.141.1",
+    "llama-index>=0.14.24",
+    "llama-index-embeddings-huggingface>=0.8.0",
+    "llama-index-llms-openai-like>=0.8.0",
+    "llama-index-readers-file>=0.7.0",
+    "loguru>=0.7.3",
+    "pydantic>=2.13.5",
+    "python-dotenv>=1.2.3",
+    "transformers>=5.17.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
