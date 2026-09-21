@@ -1,38 +1,36 @@
 import os
 import sys
-import warnings
 from dotenv import load_dotenv
-
-# Silenciar advertencias de Hugging Face en consola
-warnings.filterwarnings("ignore", category=UserWarning, module="huggingface_hub")
-warnings.filterwarnings("ignore", category=FutureWarning)
-
-from loguru import logger
 from llama_index.core import Settings
-from llama_index.embeddings.huggingface import HuggingFaceEmbedding
+from llama_index.embeddings.openai_like import OpenAILikeEmbedding
 from llama_index.llms.openai_like import OpenAILike
+from loguru import logger
 
 load_dotenv()
-
-# Variables de entorno críticas
-os.environ["HF_HUB_DISABLE_SYMLINKS_WARNING"] = "1"
-os.environ["TRANSFORMERS_NO_ADVISORY_WARNINGS"] = "1"
 
 
 class Config:
     """Configuración centralizada del sistema."""
 
+    # LLM (OpenCode)
     OPENCODE_API_KEY: str = os.getenv("OPENCODE_API_KEY", "")
     OPENCODE_BASE_URL: str = os.getenv(
         "OPENCODE_BASE_URL", "https://opencode.ai/zen/v1/"
     )
     LLM_MODEL: str = os.getenv("LLM_MODEL", "deepseek-v4-flash")
+
+    # Embeddings (NVIDIA NIM API via HTTP)
+    NVIDIA_API_KEY: str = os.getenv("NVIDIA_API_KEY", "")
+    NVIDIA_EMBED_BASE_URL: str = os.getenv(
+        "NVIDIA_EMBED_BASE_URL", "https://integrate.api.nvidia.com/v1"
+    )
     EMBED_MODEL_NAME: str = os.getenv(
-        "EMBED_MODEL_NAME", "intfloat/multilingual-e5-small"
+        "EMBED_MODEL_NAME", "nvidia/nemotron-3-embed-1b"
     )
 
-    DATA_DIR: str = os.getenv("DATA_DIR", "./mis_pdfs")
-    STORAGE_DIR: str = os.getenv("STORAGE_DIR", "./storage")
+    # Rutas
+    DATA_DIR: str = os.getenv("DATA_DIR", "data/documents")
+    STORAGE_DIR: str = os.getenv("STORAGE_DIR", "data/storage")
     LOG_DIR: str = os.getenv("LOG_DIR", "./logs")
 
 
@@ -40,14 +38,14 @@ def setup_logger():
     """Configura Loguru para consola y archivos rotatorios."""
     logger.remove()
 
-    # Consola limpia (corregido {level:<8})
+    # Consola
     logger.add(
         sys.stderr,
         format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level:<8}</level> | <cyan>{name}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
         level="INFO",
     )
 
-    # Configuración de archivos
+    # Archivo de logs
     if not os.path.exists(Config.LOG_DIR):
         os.makedirs(Config.LOG_DIR)
 
@@ -62,21 +60,28 @@ def setup_logger():
 
 
 def init_llama_settings():
-    """Inicializa la configuración global de LlamaIndex."""
+    """Inicializa la configuración global de LlamaIndex mediante llamadas HTTP remotas."""
     setup_logger()
 
+    # Validaciones de variables de entorno requeridas
     if not Config.OPENCODE_API_KEY:
-        logger.error(
-            "La variable OPENCODE_API_KEY no está definida en el archivo .env"
-        )
+        logger.error("OPENCODE_API_KEY no está definida en las variables de entorno.")
         raise ValueError("OPENCODE_API_KEY faltante en .env")
 
-    logger.info("Cargando modelo de Embeddings: {}", Config.EMBED_MODEL_NAME)
-    Settings.embed_model = HuggingFaceEmbedding(
-        model_name=Config.EMBED_MODEL_NAME
+    if not Config.NVIDIA_API_KEY:
+        logger.error("NVIDIA_API_KEY no está definida en las variables de entorno.")
+        raise ValueError("NVIDIA_API_KEY faltante en .env")
+
+    # Embedding remoto (NVIDIA NIM)
+    logger.info("Configurando Embeddings remotos (NVIDIA): {}", Config.EMBED_MODEL_NAME)
+    Settings.embed_model = OpenAILikeEmbedding(
+        model_name=Config.EMBED_MODEL_NAME,
+        api_key=Config.NVIDIA_API_KEY,
+        api_base=Config.NVIDIA_EMBED_BASE_URL,
     )
 
-    logger.info("Cargando LLM: {}", Config.LLM_MODEL)
+    # LLM remoto (OpenCode)
+    logger.info("Configurando LLM remoto: {}", Config.LLM_MODEL)
     Settings.llm = OpenAILike(
         model=Config.LLM_MODEL,
         api_key=Config.OPENCODE_API_KEY,
@@ -85,4 +90,5 @@ def init_llama_settings():
         context_window=128000,
         temperature=0.1,
     )
-    logger.success("Entorno de LlamaIndex configurado correctamente.")
+
+    logger.success("Entorno de LlamaIndex configurado correctamente sin dependencias locales pesadas.")
