@@ -9,16 +9,20 @@ router = APIRouter(
 
 
 @router.post("/chat", response_model=ChatResponse)
-def chat(
-    payload: ChatRequest,
-    request: Request,
-) -> ChatResponse:
-    rag_service = request.app.state.rag_service
-
-    response = rag_service.ask(
-        payload.message,
-    )
-
+def chat(payload: ChatRequest) -> ChatResponse:
     return ChatResponse(
-        message=response,
+        message=f"Mensaje recibido: {payload.message}"
     )
+# def chat(
+#     payload: ChatRequest,
+#     request: Request,
+# ) -> ChatResponse:
+#     rag_service = request.app.state.rag_service
+
+#     response = rag_service.ask(
+#         payload.message,
+#     )
+
+#     return ChatResponse(
+#         message=response,
+#     )

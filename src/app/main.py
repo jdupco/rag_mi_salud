@@ -4,27 +4,32 @@ from fastapi import FastAPI
 from loguru import logger
 
 from app.api.routes.chat import router as chat_router
-from app.services.rag import RAGService
+# from app.services.rag import RAGService
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    app.state.rag_service = None
-
+    logger.info("Aplicación iniciada")
     yield
+    logger.info("Cerrando aplicación...")
 
-    app.state.rag_service = None
 # async def lifespan(app: FastAPI):
-#     logger.info("Inicializando RAGService...")
-
-#     app.state.rag_service = RAGService()
-
-#     logger.info("RAGService inicializado")
+#     app.state.rag_service = None
 
 #     yield
 
-#     logger.info("Cerrando aplicación...")
 #     app.state.rag_service = None
+# # async def lifespan(app: FastAPI):
+# #     logger.info("Inicializando RAGService...")
+
+# #     app.state.rag_service = RAGService()
+
+# #     logger.info("RAGService inicializado")
+
+# #     yield
+
+# #     logger.info("Cerrando aplicación...")
+# #     app.state.rag_service = None
 
 
 app = FastAPI(
