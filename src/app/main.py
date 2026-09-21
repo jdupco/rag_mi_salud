@@ -9,16 +9,22 @@ from app.services.rag import RAGService
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    logger.info("Inicializando RAGService...")
-
-    app.state.rag_service = RAGService()
-
-    logger.info("RAGService inicializado")
+    app.state.rag_service = None
 
     yield
 
-    logger.info("Cerrando aplicación...")
     app.state.rag_service = None
+# async def lifespan(app: FastAPI):
+#     logger.info("Inicializando RAGService...")
+
+#     app.state.rag_service = RAGService()
+
+#     logger.info("RAGService inicializado")
+
+#     yield
+
+#     logger.info("Cerrando aplicación...")
+#     app.state.rag_service = None
 
 
 app = FastAPI(
