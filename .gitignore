@@ -255,3 +255,9 @@ tempCodeRunnerFile.py
 __pypackages__/
 .abstra/
 .streamlit/secrets.toml
+
+# ============================================================
+# Data
+# ============================================================
+
+data/documents
